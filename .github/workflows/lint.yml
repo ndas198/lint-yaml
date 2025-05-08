@@ -1,0 +1,55 @@
+name: Kubernetes YAML Format & Vulnerability Scan
+
+on:
+  push:
+    paths:
+      - '**.yaml'
+      - '**.yml'
+  pull_request:
+    paths:
+      - '**.yaml'
+      - '**.yml'
+permissions: read-all
+jobs:
+  scan-k8s-yaml:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Optional: Format YAML using Prettier
+    - name: Install Prettier
+      run: npm install -g prettier
+
+    - name: Format YAML files
+      run: prettier --write "**/*.y?(a)ml"
+
+    # Trivy - Kubernetes YAML Vulnerability Scan
+    - name: Install Trivy
+      run: |
+        sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy -y
+
+    - name: Run Trivy Config Scan
+      run: trivy config ./dev
+
+    # kube-linter - Static Analysis
+    - name: Install kube-linter
+      run: |
+        curl -Lo kube-linter.tar.gz https://github.com/stackrox/kube-linter/releases/latest/download/kube-linter-linux.tar.gz
+        tar -xzf kube-linter.tar.gz
+        sudo mv kube-linter /usr/local/bin/
+
+    - name: Run kube-linter
+      run: kube-linter lint .
+
+    # Optional: Checkov for policy-as-code scanning
+    - name: Install Checkov
+      run: pip install checkov
+
+    - name: Run Checkov
+      run: checkov -d ./dev

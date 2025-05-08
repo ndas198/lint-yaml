@@ -1,0 +1,10 @@
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: demo
+  namespace: flux-system
+spec:
+  image: nginxinc/nginx-unprivileged
+  interval: 1m0s
+  provider: nginxinc

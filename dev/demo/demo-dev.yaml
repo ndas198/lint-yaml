@@ -1,0 +1,43 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: demo-dev
+  namespace: default
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: ./charts/demo
+      version: '0.1.x'
+      sourceRef:
+        kind: GitRepository
+        name: github-helm-charts
+        namespace: flux-system
+      interval: 1m
+  values:
+    replicaCount: 1
+    image:
+      repository: nginxinc/nginx-unprivileged # {"$imagepolicy": "flux-system:demo:name"}
+      tag: 1.25.3
+      pullPolicy: IfNotPresent
+    nameOverride: "demo-dev"
+    fullnameOverride: "demo-dev"
+    serviceAccount:
+      name: "demo-dev"
+    readinessGates:
+      enabled: false
+      ingressName: demo-pocket
+    preUpgradeJob: true
+    service:
+      type: NodePort
+      port: 80
+    resources:
+      limits:
+        cpu: 60m
+        memory: 168Mi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+    dbPassword:
+      fromSecret: true
+    filebeatEnabled: true
