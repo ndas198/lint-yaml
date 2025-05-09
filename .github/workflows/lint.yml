@@ -23,7 +23,9 @@ jobs:
       run: npm install -g prettier
 
     - name: Format YAML files
-      run: prettier --write "**/*.y?(a)ml"
+      run: prettier --write "$TARGET_PATH/**/*.y?(a)ml"
+      env:
+        TARGET_PATH: ./dev
 
     # Trivy - Kubernetes YAML Vulnerability Scan
     - name: Install Trivy
